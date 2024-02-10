@@ -15,18 +15,16 @@ app.use(cors());
 
 const users = [
     { username: 'admin', password: 'admin', userType: 'admin' },
-    { username: 'user', password: 'user', userType: 'regular' }
+    { username: 'regular', password: 'regular', userType: 'regular' }
 ];
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
-    console.log('userInfo', username, password);
     const user = users.find(u => u.username === username && u.password === password);
     if (!user) {
         return res.status(401).json({ error: 'Invalid username or password' });
     }
     const token = jwt.sign({ username, userType: user.userType }, JWT_SECRET);
-    console.log('token==', token)
     res.status(200).json({ message: 'Successfully logged in', token: token })
     // res.status(200).json({ token });
 });
@@ -80,7 +78,7 @@ app.post('/addBook', authenticateToken, (req, res) => {
         }
 
         // Add book to adminUser.csv
-        const writer = csvWriter();
+        const writer = csvWriter({ sendHeaders: !fs.existsSync('regularUser.csv') });
         writer.pipe(fs.createWriteStream('regularUser.csv', { flags: 'a' }));
         writer.write({ bookName, author, publicationYear });
         writer.end();
